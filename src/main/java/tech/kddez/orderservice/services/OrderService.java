@@ -9,8 +9,10 @@ import tech.kddez.orderservice.entities.OrderItem;
 import tech.kddez.orderservice.repositories.OrderItemRepository;
 import tech.kddez.orderservice.repositories.OrderRepository;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,41 +22,45 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
 
-    public Order createOrder(OrderRequest orderRequest){
-
+    public Order createOrder(OrderRequest orderRequest) {
         Order order = new Order();
         order.setClientName(orderRequest.clientName());
-        List<OrderItem> orderItems = new ArrayList<>();
-        double totalPrice = 0.0;
+        order.setOrderDate(LocalDate.now());
 
-        for(OrderItemRequest itemRequest: orderRequest.orderItemRequests()){
+        List<OrderItem> orderItems = orderRequest.orderItemRequests()
+                .stream()
+                .map(this::toEntity)
+                .peek(orderItem -> orderItem.setOrder(order))
+                .collect(Collectors.toList());
 
-            OrderItem orderItem = new OrderItem();
-            orderItem.setProduct(itemRequest.product());
-            orderItem.setQuantity(itemRequest.quantity());
-            orderItem.setPrice(itemRequest.price());
+        double totalPrice = orderItems
+                .stream()
+                .mapToDouble(items -> items.getQuantity() * items.getPrice())
+                .sum();
 
-            totalPrice += itemRequest.price() * itemRequest.quantity(); // Calcula o preço total
-            orderItem.setOrder(order);
-            orderItems.add(orderItem);
-        }
-
-        order.setTotalPrice(totalPrice); // Define o preço total
+        order.setTotalPrice(totalPrice);
         order.setOrderItems(orderItems);
-        Order entity = orderRepository.save(order);
+        orderRepository.save(order);
 
-        for(OrderItem item : orderItems){
-            orderItemRepository.save(item);
-        }
+        orderItems.forEach(orderItemRepository::save);
 
-        return entity;
+        return order;
     }
 
-    public List<Order> orderList(){
+    public List<Order> orderList() {
         return orderRepository.findAll();
     }
 
-    public void deleteOrder(){orderRepository.deleteAll();
+    public void deleteOrder() {
+        orderRepository.deleteAll();
+    }
+
+    public OrderItem toEntity(OrderItemRequest orderItemRequest) {
+        OrderItem orderItem = new OrderItem();
+        orderItem.setProduct(orderItemRequest.product());
+        orderItem.setQuantity(orderItemRequest.quantity());
+        orderItem.setPrice(orderItemRequest.price());
+        return orderItem;
     }
 
 }

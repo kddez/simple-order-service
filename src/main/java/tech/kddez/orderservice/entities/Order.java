@@ -11,24 +11,16 @@ import java.util.List;
 @Table(name = "ORDERS")
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
+@Data
 public class Order {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String orderId;
-    @CreatedDate
     private LocalDate orderDate;
     private String clientName;
     private Double totalPrice;
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<OrderItem> orderItems;
-
-    @PrePersist
-    public void prePersist(){
-        this.orderDate = LocalDate.now();
-    }
 
 }

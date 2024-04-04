@@ -2,17 +2,14 @@ package tech.kddez.orderservice.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import tech.kddez.orderservice.dtos.OrderItemRequest;
 
 @Entity
 @Table(name = "ORDER_ITEMS")
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
+@Data
 public class OrderItem {
 
     @Id
